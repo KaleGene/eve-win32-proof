@@ -12,9 +12,9 @@ jobs:
   prove:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: '24.22.0'   # pinned to the version named in the report — not "latest"
 
@@ -52,7 +52,7 @@ jobs:
             exit 1
           }
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: eve-win32-proof
