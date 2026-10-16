@@ -12,9 +12,9 @@ jobs:
   prove:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '24.22.0'   # pinned to the version named in the report — not "latest"
 
@@ -27,6 +27,10 @@ jobs:
       - name: Show the repo-shipped link file
         shell: pwsh
         run: Get-Content .\.vercel\project.json
+
+      - name: Tamper-proofing — remove any pre-existing marker before the run
+        shell: pwsh
+        run: Remove-Item .\pwned.txt, .\proof-output.txt -ErrorAction SilentlyContinue
 
       - name: Run the real sink (default platform — no forcing)
         shell: pwsh
@@ -48,7 +52,7 @@ jobs:
             exit 1
           }
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: always()
         with:
           name: eve-win32-proof
